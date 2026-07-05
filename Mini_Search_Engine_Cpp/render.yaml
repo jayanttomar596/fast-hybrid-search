@@ -8,6 +8,8 @@ services:
     envVars:
       - key: PORT
         value: 8080
+      - key: EMBEDDING_SERVICE_URL
+        value: http://python-rag-gateway:3000
 
   # Python RAG Gateway Service
   - type: web

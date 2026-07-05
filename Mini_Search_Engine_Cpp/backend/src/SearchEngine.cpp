@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <unordered_set>
 #include <chrono>
+#include <cstdlib>
 #define CPPHTTPLIB_OPENSSL_SUPPORT // UST be defined before httplib.h
 #include "httplib.h"
 #include "json.hpp" // nlohmann/json
@@ -56,23 +57,24 @@ double SearchEngine::cosineSimilarity(const vector<float>& A, const vector<float
 
 // ---------------- OLLAMA LOCAL API CALL ----------------
 vector<float> SearchEngine::getOpenAIEmbedding(const string& text) {
-    // Calling your LOCAL machine, not the internet!
-    httplib::Client cli("http://localhost:3000");
+    const char* env_url = std::getenv("EMBEDDING_SERVICE_URL");
+    string embeddingServiceUrl = env_url ? env_url : "http://python-rag-gateway:3000";
+
+    httplib::Client cli(embeddingServiceUrl.c_str());
 
     json req_body = {
         {"model", "nomic-embed-text"},
         {"prompt", text}
     };
 
-    // No API key or Bearer Token required!
     auto res = cli.Post("/api/embeddings", req_body.dump(), "application/json");
 
     if (res && res->status == 200) {
         json res_json = json::parse(res->body);
         return res_json["embedding"].get<vector<float>>();
     }
-    
-    cout << "Failed to fetch embedding from local Ollama. Is the Ollama app running?\n";
+
+    cout << "Failed to fetch embedding from embedding service at " << embeddingServiceUrl << "\n";
     return {};
 }
 

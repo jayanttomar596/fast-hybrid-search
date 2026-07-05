@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import uvicorn
 import requests
 import numpy as np
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 CPP_BACKEND_URL = os.environ.get("CPP_BACKEND_URL", "http://127.0.0.1:8080").rstrip("/")
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 embedder = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
@@ -95,7 +97,7 @@ async def proxy_to_cpp(path: str, request: Request):
         raise HTTPException(status_code=500, detail=f"C++ Engine unreachable: {str(e)}")
 
 # 4. SERVE THE FRONTEND
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 3000))
