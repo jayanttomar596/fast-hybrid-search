@@ -20,6 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+CPP_BACKEND_URL = os.environ.get("CPP_BACKEND_URL", "http://127.0.0.1:8080").rstrip("/")
+
 embedder = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
 
@@ -43,7 +45,7 @@ def rag_chat(request: ChatRequest):
             return {"answer": entry["answer"], "cached": True}
 
     try:
-        cpp_response = requests.get(f"http://localhost:8080/search?q={request.question}&page=1&limit=5")
+        cpp_response = requests.get(f"{CPP_BACKEND_URL}/search?q={request.question}&page=1&limit=5")
         cpp_response.raise_for_status()
         search_data = cpp_response.json()
 
@@ -73,13 +75,13 @@ async def proxy_embeddings(request: Request):
 # Note: We put this last so it only catches requests that aren't /api/chat or /api/embeddings
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "OPTIONS"])
 async def proxy_to_cpp(path: str, request: Request):
-    cpp_url = f"http://localhost:8080/{path}"
     params = dict(request.query_params)
     body = await request.body()
     headers = dict(request.headers)
     headers.pop("host", None) 
     
     try:
+        cpp_url = f"{CPP_BACKEND_URL}/{path}"
         resp = requests.request(
             method=request.method,
             url=cpp_url,
