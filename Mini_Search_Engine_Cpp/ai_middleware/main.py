@@ -11,10 +11,8 @@ from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 
-# 1. INITIALIZE APP FIRST
 app = FastAPI(title="RAG Orchestration API")
 
-# 2. CONFIGURE MIDDLEWARE
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,8 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. SETUP MODELS
-# Ensure GOOGLE_API_KEY is set in Render Environment Variables
 embedder = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
 
@@ -34,36 +30,7 @@ SIMILARITY_THRESHOLD = 0.95
 class ChatRequest(BaseModel):
     question: str
 
-# 4. TRAFFIC COP: PROXY ALL OTHER /api/ REQUESTS TO C++
-@app.api_route("/api/{path:path}", methods=["GET", "POST", "OPTIONS"])
-async def proxy_to_cpp(path: str, request: Request):
-    # Do not intercept chat or embeddings, Python handles those!
-    if path in ["chat", "embeddings"]:
-        return
-        
-    cpp_url = f"http://localhost:8080/{path}"
-    
-    # Grab URL parameters and body
-    params = dict(request.query_params)
-    body = await request.body()
-    
-    # Clean headers
-    headers = dict(request.headers)
-    headers.pop("host", None) 
-    
-    try:
-        resp = requests.request(
-            method=request.method,
-            url=cpp_url,
-            params=params,
-            data=body,
-            headers=headers
-        )
-        return Response(content=resp.content, status_code=resp.status_code, headers=dict(resp.headers))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"C++ Engine unreachable: {str(e)}")
-
-# 5. CHAT ENDPOINT
+# 1. CHAT ENDPOINT (Explicitly defined)
 @app.post("/api/chat")
 def rag_chat(request: ChatRequest):
     question_vector = np.array(embedder.embed_query(request.question))
@@ -94,7 +61,7 @@ def rag_chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 6. OLLAMA PROXY ENDPOINT FOR C++ ENGINE
+# 2. EMBEDDINGS ENDPOINT (Explicitly defined)
 @app.post("/api/embeddings")
 async def proxy_embeddings(request: Request):
     data = await request.json()
@@ -102,8 +69,30 @@ async def proxy_embeddings(request: Request):
     vector = await embedder.aembed_query(text)
     return {"embedding": vector}
 
-# 7. SERVE THE FRONTEND
-# Note: Ensure the path points to your frontend folder correctly relative to main.py
+# 3. TRAFFIC COP: PROXY ALL OTHER /api/ REQUESTS TO C++
+# Note: We put this last so it only catches requests that aren't /api/chat or /api/embeddings
+@app.api_route("/api/{path:path}", methods=["GET", "POST", "OPTIONS"])
+async def proxy_to_cpp(path: str, request: Request):
+    cpp_url = f"http://localhost:8080/{path}"
+    params = dict(request.query_params)
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop("host", None) 
+    
+    try:
+        resp = requests.request(
+            method=request.method,
+            url=cpp_url,
+            params=params,
+            data=body,
+            headers=headers,
+            timeout=10
+        )
+        return Response(content=resp.content, status_code=resp.status_code, headers=dict(resp.headers))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"C++ Engine unreachable: {str(e)}")
+
+# 4. SERVE THE FRONTEND
 app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 
 if __name__ == "__main__":

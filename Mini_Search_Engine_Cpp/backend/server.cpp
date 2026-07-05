@@ -404,7 +404,7 @@ int main() {
 
 
     cout << "Dynamic Search Engine running at http://localhost:8080\n";
-    server.listen("localhost", 8080);
+    server.listen("0.0.0.0", 8080);
 }
 
 
