@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dynamic Mini Search Engine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Fast Hybrid Search Engine</h1>
+
+  <!-- Upload Section -->
+  <div class="upload-box">
+    <h3>Upload Document (.txt, .pdf)</h3>
+    <input type="file" id="fileInput" accept=".txt, .pdf">
+    <button type="button" onclick="uploadFile()">Upload</button>
+    <p id="uploadStatus"></p>
+  </div>
+
+  <!-- corpus section -->
+  <div class="corpus-info">
+    <p id="corpusStats">Documents: 0 | Vocabulary: 0</p>
+    <p id="indexStats" style="color:#94a3b8;"></p>
+    <button onclick="loadInitialCorpus()">Load Initial Corpus</button>
+    <button onclick="rebuildIndex()">Rebuild Index</button>
+    <button onclick="clearCorpus()">Clear Corpus</button>
+    <button onclick="saveIndexToDisk()">Save Index to Disk</button>
+    <button onclick="runBenchmark()">Run Benchmark</button>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-box">
+    <input id="query" placeholder="Type to search..." autocomplete="off">
+    <div id="suggestions"></div>
+    <button onclick="search()">Search</button>
+  </div>
+
+
+  <div class="search-box" style="margin-top: 20px;">
+    <h3>🤖 AI Database Assistant (RAG)</h3>
+    <div id="chatHistory" class="chat-history"></div>
+    <div style="display: flex; gap: 10px;">
+      <input id="chatInput" type="text" placeholder="Ask a question about your documents..." autocomplete="off">
+      <button onclick="sendChatMessage()">Ask AI</button>
+    </div>
+  </div>
+  
+
+
+  <div id="output"></div>
+  
+  <div id="pagination" style="display: none; margin-top: 20px; gap: 10px; justify-content: center;">
+    <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+    <span id="pageIndicator" style="align-self: center; font-weight: bold;">Page 1</span>
+    <button id="nextBtn" onclick="changePage(1)">Next</button>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

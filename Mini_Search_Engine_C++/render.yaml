@@ -1,0 +1,23 @@
+services:
+  # C++ Backend Service
+  - type: web
+    name: cpp-search-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+
+  # Python RAG Gateway Service
+  - type: web
+    name: python-rag-gateway
+    env: docker
+    dockerfilePath: Dockerfile.python
+    plan: free
+    envVars:
+      - key: CPP_BACKEND_URL
+        value: http://cpp-search-backend:8080
+      - key: OLLAMA_URL
+        # If connecting to an external or self-hosted Ollama instance
+        value: http://localhost:11434

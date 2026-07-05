@@ -1,0 +1,29 @@
+Search engines are software systems designed to retrieve information from large collections of documents.
+A typical search engine works by crawling indexing and ranking documents.
+
+Modern search engines rely heavily on inverted index data structures.
+An inverted index maps each word to the documents in which it appears.
+This allows fast search without scanning all documents repeatedly.
+
+100 200 3000 - Just to check whether it index the numeric value or not 
+
+Efficient search engines store term frequency positions and byte offsets.
+These details help in ranking results performing phrase search and generating relevant snippets.
+
+Information retrieval systems use advanced ranking algorithms such as TF-IDF and BM25.
+These algorithms measure how important a word is within a document compared to the entire corpus.
+
+Search engines also perform query processing including tokenization normalization and stemming.
+Query optimization techniques help improve performance and reduce response time.
+
+Snippet generation is an important feature of search systems.
+It provides users with contextual previews of matched query terms within documents.
+
+
+
+search
+version-2.0
+node.js
+std::vector
+3.14
+c++

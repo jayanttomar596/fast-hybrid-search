@@ -1,0 +1,17 @@
+Ranking algorithms are used to order documents based on their relevance to a query.
+TF-IDF is a classic ranking method used in many search engines.
+
+Term frequency measures how often a word appears in a document.
+Inverse document frequency measures how rare the word is across all documents.
+
+BM25 is an improved ranking algorithm that considers document length normalization.
+It provides better relevance estimation than TF-IDF in most cases.
+
+Ranking systems must balance term importance and document length.
+Long documents may contain more words but that does not always mean they are more relevant.
+
+Phrase search and proximity search improve search accuracy.
+They allow the system to detect whether query terms appear close to each other.
+
+Relevance ranking is a critical component of information retrieval systems.
+Better ranking improves user satisfaction and search performance.

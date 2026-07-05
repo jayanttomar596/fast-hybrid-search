@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  cpp-engine:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./runtime_corpus:/runtime_corpus
+      - ./database:/database
+    restart: unless-stopped
+
+  ai-gateway:
+    build: ./ai_middleware
+    ports:
+      - "3000:3000"
+    depends_on:
+      - cpp-engine
+    environment:
+      - ENGINE_URL=http://cpp-engine:8080
+      - OLLAMA_HOST=http://ollama:11434
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_storage:

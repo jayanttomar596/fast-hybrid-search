@@ -1,0 +1,17 @@
+Efficient data structures are essential for building scalable search engines.
+Inverted indexes are commonly used to map terms to document identifiers.
+
+Trie data structures are used in search engines for implementing autocomplete functionality.
+When a user types a prefix the trie helps suggest possible search terms.
+
+Hash tables and trees are also widely used in information retrieval systems.
+These data structures improve lookup performance and reduce latency.
+
+Position based indexing supports phrase queries and proximity search.
+This allows search engines to find documents where words appear together within a given distance.
+
+Document frequency and term frequency are important statistics for ranking algorithms.
+TF-IDF uses these values to determine relevance scores.
+
+Efficient indexing techniques reduce memory usage and speed up query evaluation.
+Understanding data structures is crucial for implementing modern search systems.

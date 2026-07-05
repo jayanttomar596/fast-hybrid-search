@@ -1,0 +1,44 @@
+HOW TO RUN (FOLLOW EXACTLY)
+
+
+
+1) Run backend
+
+cd Mini_Search_Engine_C++
+cd backend
+make run
+
+
+run this in the terminal
+
+
+
+You must see:
+
+Backend running at http://localhost:8080
+
+
+
+
+
+2) Run Python server
+
+cd Mini_Search_Engine_C++
+cd ai_middleware
+python main.py
+
+
+
+
+
+
+3) Run frontend server
+
+go live in the index.html
+
+
+
+
+
+
+
