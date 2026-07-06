@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# 1. Start C++ Engine
+# 1. Start C++ Engine in background
 cd /app/backend
-./engine &
+./engine > /var/log/cpp_engine.log 2>&1 &
 
-# 2. Wait 5 seconds for the C++ engine to boot up
-sleep 5
+# 2. Wait longer for the engine to load the index into memory
+echo "Waiting for C++ Engine index to load..."
+sleep 15 
 
 # 3. Start Python Gateway
 cd /app/ai_middleware
