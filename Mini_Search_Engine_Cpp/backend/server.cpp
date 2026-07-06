@@ -9,9 +9,47 @@ namespace fs = std::filesystem;
 
 using namespace std;   
 
-static string resolveAppPath(const string& relativePath) {
+static string findWritableRoot() {
+    vector<string> candidates;
+
     const char* envRoot = std::getenv("APP_ROOT");
-    string root = envRoot && *envRoot ? envRoot : "/app";
+    if (envRoot && *envRoot) {
+        candidates.push_back(envRoot);
+    }
+
+    candidates.push_back("/app");
+
+    char cwd[4096];
+    if (getcwd(cwd, sizeof(cwd))) {
+        candidates.push_back(cwd);
+
+        fs::path cwdPath(cwd);
+        fs::path parentPath = cwdPath.parent_path();
+        if (!parentPath.empty()) {
+            candidates.push_back(parentPath.string());
+        }
+    }
+
+    for (const string& candidate : candidates) {
+        fs::path root(candidate);
+        std::error_code ec;
+        fs::create_directories(root, ec);
+        if (ec) continue;
+
+        fs::path probeFile = root / ".write-test";
+        ofstream probe(probeFile.string(), ios::app);
+        if (probe) {
+            probe.close();
+            fs::remove(probeFile, ec);
+            return root.string();
+        }
+    }
+
+    return "/tmp";
+}
+
+static string resolveAppPath(const string& relativePath) {
+    static string root = findWritableRoot();
     if (!root.empty() && root.back() == '/') root.pop_back();
     if (relativePath.empty()) return root;
     return root + "/" + relativePath;
