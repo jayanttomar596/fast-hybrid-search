@@ -66,23 +66,31 @@ double SearchEngine::cosineSimilarity(const vector<float>& A, const vector<float
 // ---------------- OLLAMA LOCAL API CALL ----------------
 vector<float> SearchEngine::getOpenAIEmbedding(const string& text) {
     const char* env_url = std::getenv("EMBEDDING_SERVICE_URL");
-    string embeddingServiceUrl = env_url ? env_url : "http://python-rag-gateway:3000";
+    string embeddingServiceUrl = env_url && *env_url ? env_url : "http://127.0.0.1:3000";
 
-    httplib::Client cli(embeddingServiceUrl.c_str());
+    try {
+        httplib::Client cli(embeddingServiceUrl.c_str());
+        cli.set_connection_timeout(2);
+        cli.set_read_timeout(2);
 
-    json req_body = {
-        {"model", "nomic-embed-text"},
-        {"prompt", text}
-    };
+        json req_body = {
+            {"model", "nomic-embed-text"},
+            {"prompt", text}
+        };
 
-    auto res = cli.Post("/api/embeddings", req_body.dump(), "application/json");
+        auto res = cli.Post("/api/embeddings", req_body.dump(), "application/json");
 
-    if (res && res->status == 200) {
-        json res_json = json::parse(res->body);
-        return res_json["embedding"].get<vector<float>>();
+        if (res && res->status == 200) {
+            json res_json = json::parse(res->body);
+            return res_json["embedding"].get<vector<float>>();
+        }
+    } catch (const std::exception& e) {
+        cerr << "Embedding service unavailable at " << embeddingServiceUrl << ": " << e.what() << endl;
+    } catch (...) {
+        cerr << "Embedding service unavailable at " << embeddingServiceUrl << endl;
     }
 
-    cout << "Failed to fetch embedding from embedding service at " << embeddingServiceUrl << "\n";
+    cerr << "Falling back to lexical search without semantic embeddings" << endl;
     return {};
 }
 
