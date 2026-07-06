@@ -94,6 +94,7 @@ async def proxy_to_cpp(path: str, request: Request):
         )
         return Response(content=resp.content, status_code=resp.status_code, headers=dict(resp.headers))
     except Exception as e:
+        print(f"DEBUG: C++ Engine failed: {str(e)}", flush=True)
         raise HTTPException(status_code=500, detail=f"C++ Engine unreachable: {str(e)}")
 
 # 4. SERVE THE FRONTEND

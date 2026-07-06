@@ -823,7 +823,7 @@ void SearchEngine::loadSampleDataset() {
 
     namespace fs = std::filesystem;
 
-    string folderPath = "../documents";
+    string folderPath = resolveAppPath("documents");
 
     for (const auto& entry : fs::directory_iterator(folderPath)) {
 
@@ -906,7 +906,7 @@ void SearchEngine::scanCorpusFolders() {
     // Include permanent corpus ONLY if enabled
     if (includeInitialCorpus) {
 
-        for (const auto& entry : fs::directory_iterator("../documents")) {
+        for (const auto& entry : fs::directory_iterator(resolveAppPath("documents"))) {
             if (entry.is_regular_file() &&
                 entry.path().extension() == ".txt") {
                 documents.push_back(entry.path().string());
@@ -915,7 +915,7 @@ void SearchEngine::scanCorpusFolders() {
     }
 
     // Always include runtime corpus
-    for (const auto& entry : fs::directory_iterator("../runtime_corpus")) {
+    for (const auto& entry : fs::directory_iterator(resolveAppPath("runtime_corpus"))) {
         if (entry.is_regular_file() &&
             entry.path().extension() == ".txt") {
             documents.push_back(entry.path().string());
@@ -1124,7 +1124,7 @@ void SearchEngine::cleanupOrphanFiles() {
     unordered_set<string> validFiles(documents.begin(), documents.end());
 
     // 2. Scan the runtime_corpus folder
-    for (const auto& entry : fs::directory_iterator("../runtime_corpus")) {
+    for (const auto& entry : fs::directory_iterator(resolveAppPath("runtime_corpus"))) {
         if (entry.is_regular_file()) {
             string filePath = entry.path().string();
             

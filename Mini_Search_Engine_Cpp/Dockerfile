@@ -28,7 +28,8 @@ WORKDIR /app/ai_middleware
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 3. Create storage folders
-RUN mkdir -p /app/runtime_corpus /app/database
+RUN mkdir -p /app/runtime_corpus /app/database && \
+    chmod -R 777 /app/runtime_corpus /app/database
 
 # Make our startup script executable
 WORKDIR /app

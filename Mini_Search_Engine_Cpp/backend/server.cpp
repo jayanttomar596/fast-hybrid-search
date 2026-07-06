@@ -9,6 +9,13 @@ namespace fs = std::filesystem;
 
 using namespace std;   
 
+static string resolveAppPath(const string& relativePath) {
+    const char* envRoot = std::getenv("APP_ROOT");
+    string root = envRoot && *envRoot ? envRoot : "/app";
+    if (!root.empty() && root.back() == '/') root.pop_back();
+    if (relativePath.empty()) return root;
+    return root + "/" + relativePath;
+}
 
 string escapeJson(const string& s) {
     string out;
@@ -71,11 +78,11 @@ int main() {
     httplib::Server server;
 
     // STEP 1: Initialize folders (Create them if they don't exist)
-    fs::create_directory("../runtime_corpus");
-    fs::create_directory("../database");
+    fs::create_directories(resolveAppPath("runtime_corpus"));
+    fs::create_directories(resolveAppPath("database"));
 
     // STEP 2: Try to load the index from the database folder
-    string indexPath = "../database/search_index.bin";
+    string indexPath = resolveAppPath("database/search_index.bin");
     
     if (fs::exists(indexPath)) {
         cout << "Found existing index. Loading via mmap..." << endl;
@@ -88,7 +95,7 @@ int main() {
         cout << "No existing index found. Starting fresh." << endl;
         
         // NEW: If there is no index at all, everything in runtime_corpus is an orphan. Wipe it!
-        for (const auto& entry : fs::directory_iterator("../runtime_corpus")) {
+        for (const auto& entry : fs::directory_iterator(resolveAppPath("runtime_corpus"))) {
             if (entry.is_regular_file()) {
                 fs::remove(entry.path());
             }
@@ -135,12 +142,12 @@ int main() {
             for(char c : extRaw) extension += tolower(c); 
         }
 
-        string savePath = "../runtime_corpus/" + baseName;
+        string savePath = resolveAppPath("runtime_corpus/" + baseName);
         int counter = 1;
 
         // Loop to handle duplicate filenames
         while (fs::exists(savePath)) {
-            savePath = "../runtime_corpus/" + name + "_" + to_string(counter) + extension;
+            savePath = resolveAppPath("runtime_corpus/" + name + "_" + to_string(counter) + extension);
             counter++;
         }
 
@@ -154,7 +161,7 @@ int main() {
         // NEW: PDF Processing Logic
         if (extension == ".pdf") {
             // Define where the extracted text will be saved
-            string txtPath = "../runtime_corpus/" + name + "_" + to_string(counter) + ".txt";
+            string txtPath = resolveAppPath("runtime_corpus/" + name + "_" + to_string(counter) + ".txt");
 
             // Construct shell command: pdftotext "input.pdf" "output.txt"
             string command = "pdftotext \"" + savePath + "\" \"" + txtPath + "\"";
@@ -296,14 +303,14 @@ int main() {
         engine.clearIndex();
 
         // 2. Delete all raw uploaded files (The Bookshelf)
-        for (const auto& entry : fs::directory_iterator("../runtime_corpus")) {
+        for (const auto& entry : fs::directory_iterator(resolveAppPath("runtime_corpus"))) {
             if (entry.is_regular_file()) {
                 fs::remove(entry.path());
             }
         }
 
         // 3. NEW: Delete the binary index file on disk (The Card Catalog)
-        string indexPath = "../database/search_index.bin";
+        string indexPath = resolveAppPath("database/search_index.bin");
         if (fs::exists(indexPath)) {
             fs::remove(indexPath);
         }
@@ -342,7 +349,7 @@ int main() {
         vector<string> filePaths;
 
         // Scan permanent corpus
-        for (const auto& entry : fs::directory_iterator("../documents")) {
+        for (const auto& entry : fs::directory_iterator(resolveAppPath("documents"))) {
             if (entry.is_regular_file() &&
                 entry.path().extension() == ".txt") {
                 filePaths.push_back(entry.path().string());
@@ -350,7 +357,7 @@ int main() {
         }
 
         // Scan runtime corpus
-        for (const auto& entry : fs::directory_iterator("../runtime_corpus")) {
+        for (const auto& entry : fs::directory_iterator(resolveAppPath("runtime_corpus"))) {
             if (entry.is_regular_file() &&
                 entry.path().extension() == ".txt") {
                 filePaths.push_back(entry.path().string());
@@ -408,7 +415,7 @@ int main() {
     // -------- Save Index Endpoint --------
     server.Post("/saveIndex", [&](const httplib::Request& req, httplib::Response& res) {
         // NEW: Save to the dedicated database folder
-        engine.saveIndex("../database/search_index.bin");
+        engine.saveIndex(resolveAppPath("database/search_index.bin"));
         res.set_header("Access-Control-Allow-Origin", "*");
         res.set_content("Index successfully saved to disk!", "text/plain");
     });
