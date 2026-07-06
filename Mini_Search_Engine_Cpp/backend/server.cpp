@@ -197,42 +197,53 @@ int main() {
 
 
     // -------- Search Endpoint --------
-    server.Get("/search", [&](const httplib::Request& req,
-                            httplib::Response& res) {
-
+    server.Get("/search", [&](const httplib::Request& req, httplib::Response& res) {
+    try {
         if (!req.has_param("q")) {
-            res.set_content("Missing query", "text/plain");
+            res.status = 400; // Bad Request
+            res.set_content("Missing query parameter 'q'", "text/plain");
             return;
         }
 
         auto q = req.get_param_value("q");
-
-
         int page = req.has_param("page") ? stoi(req.get_param_value("page")) : 1;
         int limit = req.has_param("limit") ? stoi(req.get_param_value("limit")) : 10;
 
-        // Start timer
         auto start = std::chrono::high_resolution_clock::now();
 
+        // Perform search
         auto results = engine.searchAPI(q, page, limit);
 
-        // End timer
         auto end = std::chrono::high_resolution_clock::now();
-
-        double latency =
-            std::chrono::duration<double, std::milli>(end - start).count();
+        double latency = std::chrono::duration<double, std::milli>(end - start).count();
 
         // Build JSON
         string resultsJson = toJson(results);
 
-        // Inject latency into JSON
-        string finalJson = "{";
-        finalJson += "\"latency_ms\":" + to_string(latency) + ",";
-        finalJson += resultsJson.substr(1); // remove first '{'
+        // Safely construct the final JSON
+        // Ensure resultsJson is not empty and starts with '{'
+        if (resultsJson.length() > 1 && resultsJson[0] == '{') {
+            string finalJson = "{\"latency_ms\":" + to_string(latency) + "," + resultsJson.substr(1);
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(finalJson, "application/json");
+        } else {
+            // Handle edge case where engine returns empty JSON
+            res.set_content("{\"latency_ms\":" + to_string(latency) + ",\"results\":[]}", "application/json");
+        }
 
-        res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_content(finalJson, "application/json");
-    });
+    } catch (const std::exception& e) {
+        // THIS IS THE KEY: If the engine crashes, this will catch the error
+        // and print it to your Render logs!
+        std::cerr << "CRITICAL ERROR in Search Handler: " << e.what() << std::endl;
+        
+        res.status = 500;
+        res.set_content("Internal Server Error: " + string(e.what()), "text/plain");
+    } catch (...) {
+        std::cerr << "Unknown critical error occurred in search handler" << std::endl;
+        res.status = 500;
+        res.set_content("Unknown Internal Server Error", "text/plain");
+    }
+});
 
     
     // -------- Autocomplete Endpoint --------
