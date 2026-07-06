@@ -25,6 +25,14 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 using namespace std;
 
+static string resolveAppPath(const string& relativePath) {
+    const char* envRoot = std::getenv("APP_ROOT");
+    string root = envRoot && *envRoot ? envRoot : "/app";
+    if (!root.empty() && root.back() == '/') root.pop_back();
+    if (relativePath.empty()) return root;
+    return root + "/" + relativePath;
+}
+
 
 
 

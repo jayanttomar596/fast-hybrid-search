@@ -21,7 +21,7 @@ COPY . /app
 
 # 1. Compile the C++ Engine (Added -lssl and -lcrypto for OpenSSL)
 WORKDIR /app/backend
-RUN g++ -O3 server.cpp src/SearchEngine.cpp src/Trie.cpp -Iinclude -o engine -lpthread -lssl -lcrypto
+RUN g++ -std=c++17 -O3 server.cpp src/SearchEngine.cpp src/Trie.cpp -Iinclude -o engine -lpthread -lssl -lcrypto
 
 # 2. Install Python Dependencies
 WORKDIR /app/ai_middleware
